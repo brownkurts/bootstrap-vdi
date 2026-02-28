@@ -1,6 +1,19 @@
 ---
 - name: Build PVE VDI Thin Client
   hosts: localhost
+  connection: local
   become: true
+
+  vars:
+    # Start simple: direct node IPs
+    vdi_tls_verify: false
+    vdi_auth_backend: "pve"
+
+    vdi_hosts:
+      "192.168.2.201": 8006
+      "192.168.2.212": 8006
+      "192.168.2.215": 8006
+      "192.168.2.204": 8006
+
   roles:
     - pve_vdi_thinclient

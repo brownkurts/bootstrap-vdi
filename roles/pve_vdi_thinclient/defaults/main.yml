@@ -1,0 +1,67 @@
+---
+# OS user that will be auto-logged in locally and run the client
+vdi_local_user: "vdi"
+vdi_local_user_shell: "/bin/bash"
+
+# Where to install the app
+vdi_install_dir: "/opt/PVE-VDIClient"
+vdi_bin: "/usr/local/bin/vdiclient.py"
+
+# Client config
+vdi_config_dir: "/etc/vdiclient"
+vdi_config_file: "/etc/vdiclient/vdiclient.ini"
+
+# VDI UI defaults
+vdi_title: "VDI Login"
+vdi_theme: "LightBlue"
+vdi_kiosk: false
+vdi_fullscreen: true
+vdi_inidebug: false
+vdi_guest_type: "both"   # both|lxc|qemu
+
+# Auth config (pve, pam, etc. depending on your Proxmox setup)
+vdi_auth_backend: "pve"
+vdi_auth_totp: false
+vdi_tls_verify: false
+
+# Hosts list (key=host, value=port)
+# Example:
+# vdi_hosts:
+#   "pve1.home.arpa": 8006
+#   "10.0.1.10": 8006
+vdi_hosts: {}
+
+# Optional: rewrite the SPICE proxy host/port if needed (common if DNS/VIP differs)
+# Example:
+# vdi_spice_proxy_redirect:
+#   "pve1.home.arpa:3128": "10.0.1.10:6000"
+vdi_spice_proxy_redirect: {}
+
+# Extra remote-viewer parameters (virt-viewer)
+# USB redirection options are supported as "AdditionalParameters" in the ini example :contentReference[oaicite:1]{index=1}
+vdi_additional_parameters:
+  enable-usbredir: "true"
+  enable-usb-autoshare: "false"
+
+# Desktop session packages
+vdi_desktop_packages:
+  - "xorg"
+  - "openbox"
+  - "lightdm"
+  - "lightdm-gtk-greeter"
+  - "chromium"        # optional; useful later for docs/portal
+  - "xterm"           # useful for local troubleshooting
+  - "unclutter"       # hides mouse cursor when idle
+
+# PVE-VDIClient prereqs from README :contentReference[oaicite:2]{index=2}
+vdi_prereq_packages:
+  - "python3-pip"
+  - "python3-tk"
+  - "virt-viewer"
+  - "git"
+  - "ca-certificates"
+  - "curl"
+  - "jq"
+
+# Where to place autostart desktop entry
+vdi_autostart_dir: "/home/{{ vdi_local_user }}/.config/autostart"

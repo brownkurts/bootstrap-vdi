@@ -1,0 +1,27 @@
+[General]
+title = {{ vdi_title }}
+theme = {{ vdi_theme }}
+kiosk = {{ vdi_kiosk | lower }}
+fullscreen = {{ vdi_fullscreen | lower }}
+inidebug = {{ vdi_inidebug | lower }}
+guest_type = {{ vdi_guest_type }}
+
+[Authentication]
+auth_backend = {{ vdi_auth_backend }}
+auth_totp = {{ vdi_auth_totp | lower }}
+tls_verify = {{ vdi_tls_verify | lower }}
+
+[Hosts]
+{% for host, port in vdi_hosts.items() %}
+{{ host }} = {{ port }}
+{% endfor %}
+
+[SpiceProxyRedirect]
+{% for src, dst in vdi_spice_proxy_redirect.items() %}
+{{ src }} = {{ dst }}
+{% endfor %}
+
+[AdditionalParameters]
+{% for k, v in vdi_additional_parameters.items() %}
+{{ k }} = {{ v }}
+{% endfor %}

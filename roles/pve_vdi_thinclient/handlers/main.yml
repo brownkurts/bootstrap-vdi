@@ -1,0 +1,5 @@
+---
+- name: Restart display manager
+  ansible.builtin.service:
+    name: lightdm
+    state: restarted

@@ -1,0 +1,25 @@
+---
+- name: Ensure autostart directory exists
+  ansible.builtin.file:
+    path: "{{ vdi_autostart_dir }}"
+    state: directory
+    owner: "{{ vdi_local_user }}"
+    group: "{{ vdi_local_user }}"
+    mode: "0755"
+
+- name: Install autostart desktop entry for VDI client
+  ansible.builtin.template:
+    src: "vdiclient.desktop.j2"
+    dest: "{{ vdi_autostart_dir }}/vdiclient.desktop"
+    owner: "{{ vdi_local_user }}"
+    group: "{{ vdi_local_user }}"
+    mode: "0644"
+
+- name: (Optional) Hide cursor when idle
+  ansible.builtin.lineinfile:
+    path: "/home/{{ vdi_local_user }}/.config/openbox/autostart"
+    create: true
+    owner: "{{ vdi_local_user }}"
+    group: "{{ vdi_local_user }}"
+    mode: "0644"
+    line: "unclutter -idle 1 -root &"

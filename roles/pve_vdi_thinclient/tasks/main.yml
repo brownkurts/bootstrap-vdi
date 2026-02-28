@@ -1,0 +1,12 @@
+---
+- name: Install
+  ansible.builtin.import_tasks: install.yml
+
+- name: Configure
+  ansible.builtin.import_tasks: config.yml
+
+- name: Configure autologin
+  ansible.builtin.import_tasks: autologin.yml
+
+- name: Configure autostart
+  ansible.builtin.import_tasks: autostart.yml

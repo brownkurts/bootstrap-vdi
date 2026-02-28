@@ -1,0 +1,13 @@
+---
+- name: Enable LightDM autologin
+  ansible.builtin.copy:
+    dest: /etc/lightdm/lightdm.conf.d/50-vdi-autologin.conf
+    owner: root
+    group: root
+    mode: "0644"
+    content: |
+      [Seat:*]
+      autologin-user={{ vdi_local_user }}
+      autologin-user-timeout=0
+      user-session=openbox
+  notify: Restart display manager

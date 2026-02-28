@@ -1,0 +1,17 @@
+---
+- name: Ensure config directory exists
+  ansible.builtin.file:
+    path: "{{ vdi_config_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Write vdiclient.ini
+  ansible.builtin.template:
+    src: "vdiclient.ini.j2"
+    dest: "{{ vdi_config_file }}"
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart display manager

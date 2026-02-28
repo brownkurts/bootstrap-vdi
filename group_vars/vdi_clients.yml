@@ -1,0 +1,8 @@
+# group_vars/vdi_clients.yml  (or host_vars/<client>.yml)
+vdi_tls_verify: false          # since you’re using node default certs behind Traefik
+vdi_auth_backend: "pve"        # or "pam" if you use PAM auth on Proxmox
+vdi_hosts:
+  "192.168.2.201": 8006
+  "192.168.2.212": 8006
+  "192.168.2.215": 8006
+  "192.168.2.204": 8006

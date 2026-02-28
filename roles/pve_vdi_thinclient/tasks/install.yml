@@ -1,0 +1,32 @@
+---
+- name: Ensure local user exists
+  ansible.builtin.user:
+    name: "{{ vdi_local_user }}"
+    shell: "{{ vdi_local_user_shell }}"
+    create_home: true
+
+- name: Install desktop + prereqs
+  ansible.builtin.apt:
+    name: "{{ vdi_prereq_packages + vdi_desktop_packages }}"
+    state: present
+    update_cache: true
+
+- name: Install PVE-VDIClient from git
+  ansible.builtin.git:
+    repo: "https://github.com/joshpatten/PVE-VDIClient.git"
+    dest: "{{ vdi_install_dir }}"
+    version: "main"
+    force: false
+
+- name: Run requirements.sh (python deps)
+  ansible.builtin.command: "./requirements.sh"
+  args:
+    chdir: "{{ vdi_install_dir }}"
+  changed_when: false
+
+- name: Install launcher into /usr/local/bin
+  ansible.builtin.copy:
+    src: "{{ vdi_install_dir }}/vdiclient.py"
+    dest: "{{ vdi_bin }}"
+    mode: "0755"
+    remote_src: true

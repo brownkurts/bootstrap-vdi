@@ -49,7 +49,6 @@ vdi_desktop_packages:
   - "openbox"
   - "lightdm"
   - "lightdm-gtk-greeter"
-  - "chromium"        # optional; useful later for docs/portal
   - "xterm"           # useful for local troubleshooting
   - "unclutter"       # hides mouse cursor when idle
 

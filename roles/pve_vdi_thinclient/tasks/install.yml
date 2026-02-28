@@ -5,6 +5,17 @@
     shell: "{{ vdi_local_user_shell }}"
     create_home: true
 
+- name: Ensure dpkg is not left half-configured
+  ansible.builtin.command: dpkg --configure -a
+  changed_when: false
+  failed_when: false
+
+- name: Remove any apt/dpkg locks (best-effort)
+  ansible.builtin.shell: |
+    fuser -v /var/lib/dpkg/lock-frontend /var/lib/dpkg/lock /var/cache/apt/archives/lock /var/lib/apt/lists/lock || true
+  changed_when: false
+  failed_when: false
+  
 - name: Install desktop + prereqs (noninteractive, long-running safe)
   ansible.builtin.apt:
     name: "{{ vdi_prereq_packages + vdi_desktop_packages }}"

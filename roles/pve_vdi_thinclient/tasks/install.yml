@@ -19,7 +19,7 @@
     force: false
 
 - name: Run requirements.sh (python deps)
-  ansible.builtin.command: "./requirements.sh"
+  ansible.builtin.command: "bash ./requirements.sh"
   args:
     chdir: "{{ vdi_install_dir }}"
   changed_when: false

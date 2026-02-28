@@ -30,3 +30,12 @@
     dest: "{{ vdi_bin }}"
     mode: "0755"
     remote_src: true
+
+- name: Ensure graphical target
+  ansible.builtin.command: systemctl set-default graphical.target
+  changed_when: false
+
+- name: Enable LightDM
+  ansible.builtin.service:
+    name: lightdm
+    enabled: true

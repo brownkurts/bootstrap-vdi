@@ -5,11 +5,18 @@
     shell: "{{ vdi_local_user_shell }}"
     create_home: true
 
-- name: Install desktop + prereqs
+- name: Install desktop + prereqs (noninteractive, long-running safe)
   ansible.builtin.apt:
     name: "{{ vdi_prereq_packages + vdi_desktop_packages }}"
     state: present
     update_cache: true
+    cache_valid_time: 3600
+    install_recommends: false
+  environment:
+    DEBIAN_FRONTEND: noninteractive
+    NEEDRESTART_MODE: a
+  async: 7200
+  poll: 30
 
 - name: Install PVE-VDIClient from git
   ansible.builtin.git:

@@ -1,0 +1,6 @@
+---
+- name: Build PVE VDI Thin Client
+  hosts: localhost
+  become: true
+  roles:
+    - pve_vdi_thinclient

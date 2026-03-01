@@ -1,4 +1,12 @@
 ---
+- name: Ensure LightDM config drop-in directory exists
+  ansible.builtin.file:
+    path: /etc/lightdm/lightdm.conf.d
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
 - name: Enable LightDM autologin
   ansible.builtin.copy:
     dest: /etc/lightdm/lightdm.conf.d/50-vdi-autologin.conf
@@ -10,4 +18,7 @@
       autologin-user={{ vdi_local_user }}
       autologin-user-timeout=0
       user-session=openbox
+      greeter-hide-users=true
+      greeter-show-manual-login=false
+      allow-guest=false
   notify: Restart display manager

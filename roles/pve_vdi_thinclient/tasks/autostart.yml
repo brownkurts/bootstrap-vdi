@@ -7,6 +7,14 @@
     group: "{{ vdi_local_user }}"
     mode: "0755"
 
+- name: Ensure openbox config directory exists
+  ansible.builtin.file:
+    path: "/home/{{ vdi_local_user }}/.config/openbox"
+    state: directory
+    owner: "{{ vdi_local_user }}"
+    group: "{{ vdi_local_user }}"
+    mode: "0755"
+
 - name: Install autostart desktop entry for VDI client
   ansible.builtin.template:
     src: "vdiclient.desktop.j2"

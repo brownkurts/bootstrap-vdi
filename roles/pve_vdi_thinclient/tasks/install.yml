@@ -36,9 +36,7 @@
     version: "main"
     force: false
 
-# ---- PEP 668 safe install: use a venv instead of system pip ----
-
-# ---- PEP 668 safe install: use venv ----
+# ---- PEP 668 safe install: use a venv ----
 
 - name: Create Python venv (idempotent)
   ansible.builtin.command: "python3 -m venv {{ vdi_install_dir }}/venv"
@@ -49,15 +47,27 @@
   ansible.builtin.command: "{{ vdi_install_dir }}/venv/bin/pip install --upgrade pip setuptools wheel"
   changed_when: false
 
+# Optional debug (leave or remove)
+- name: Debug venv python/pip
+  ansible.builtin.command: "{{ item }}"
+  loop:
+    - "{{ vdi_install_dir }}/venv/bin/python -c 'import sys; print(sys.executable)'"
+    - "{{ vdi_install_dir }}/venv/bin/pip --version"
+  changed_when: false
+
 - name: Make requirements.sh executable
   ansible.builtin.file:
     path: "{{ vdi_install_dir }}/requirements.sh"
     mode: "0755"
 
-- name: Run requirements.sh inside venv
+- name: Run requirements.sh inside venv (bash)
   ansible.builtin.shell: |
-    source {{ vdi_install_dir }}/venv/bin/activate
-    bash ./requirements.sh
+    set -euo pipefail
+    export VIRTUAL_ENV="{{ vdi_install_dir }}/venv"
+    export PATH="{{ vdi_install_dir }}/venv/bin:${PATH}"
+    . "{{ vdi_install_dir }}/venv/bin/activate"
+    ./requirements.sh
   args:
     chdir: "{{ vdi_install_dir }}"
+    executable: /bin/bash
   changed_when: false

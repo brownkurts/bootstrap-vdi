@@ -51,7 +51,8 @@
     repo: "https://github.com/joshpatten/PVE-VDIClient.git"
     dest: "{{ vdi_install_dir }}"
     version: "main"
-    force: false
+    force: true
+    update: true
 
 # ---- PEP 668 safe install: use a venv ----
 - name: Create Python venv (idempotent)

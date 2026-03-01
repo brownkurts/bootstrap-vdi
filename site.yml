@@ -14,20 +14,25 @@
       "192.168.2.215": 8006
       "192.168.2.204": 8006
 
-    # add your SSH pubkey here (or pass in via --extra-vars / vars file)
+    # Your SSH pubkey to manage thin clients
     vdi_admin_ssh_pubkey: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGs8e1xn2rNm4khYFUUHZxYkvqRlUosajkq0j9SrTR8t ansible"
+
+    # Optional: make sure reboot gate is enabled
+    vdi_reboot_after_install: true
 
   roles:
     - pve_vdi_thinclient
 
   tasks:
     - name: Add Kurt SSH key for thin client management
-      ansible.builtin.authorized_key:
-        user: "{{ vdi_local_user | default('kurt') }}"
+      ansible.posix.authorized_key:
+        user: "{{ vdi_local_user | default('vdi') }}"
         key: "{{ vdi_admin_ssh_pubkey }}"
         state: present
 
-    - name: Reboot to complete VDI thin client setup
-      ansible.builtin.reboot:
-        msg: "Rebooting to complete VDI thin client setup"
-        reboot_timeout: 900
+    - name: Reboot to complete VDI thin client setup (ansible-pull local)
+      ansible.builtin.command: systemctl reboot
+      async: 1
+      poll: 0
+      changed_when: true
+      when: vdi_reboot_after_install | bool

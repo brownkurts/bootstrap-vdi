@@ -38,40 +38,26 @@
 
 # ---- PEP 668 safe install: use a venv instead of system pip ----
 
-- name: Ensure venv directory exists
-  ansible.builtin.file:
-    path: "{{ vdi_install_dir }}/venv"
-    state: directory
-    mode: "0755"
+# ---- PEP 668 safe install: use venv ----
 
-- name: Create venv (idempotent)
+- name: Create Python venv (idempotent)
   ansible.builtin.command: "python3 -m venv {{ vdi_install_dir }}/venv"
   args:
     creates: "{{ vdi_install_dir }}/venv/bin/python"
 
-- name: Upgrade pip tooling inside venv
+- name: Upgrade pip inside venv
   ansible.builtin.command: "{{ vdi_install_dir }}/venv/bin/pip install --upgrade pip setuptools wheel"
   changed_when: false
 
-- name: Install Python dependencies into venv
-  ansible.builtin.command: "{{ vdi_install_dir }}/venv/bin/pip install -r {{ vdi_install_dir }}/requirements.txt"
-  changed_when: false
-
-# Wrapper launcher so we always use the venv python
-- name: Install VDI launcher wrapper into /usr/local/bin
-  ansible.builtin.copy:
-    dest: "{{ vdi_bin }}"
+- name: Make requirements.sh executable
+  ansible.builtin.file:
+    path: "{{ vdi_install_dir }}/requirements.sh"
     mode: "0755"
-    content: |
-      #!/usr/bin/env bash
-      set -euo pipefail
-      exec "{{ vdi_install_dir }}/venv/bin/python" "{{ vdi_install_dir }}/vdiclient.py" "$@"
 
-- name: Ensure graphical target
-  ansible.builtin.command: systemctl set-default graphical.target
+- name: Run requirements.sh inside venv
+  ansible.builtin.shell: |
+    source {{ vdi_install_dir }}/venv/bin/activate
+    bash ./requirements.sh
+  args:
+    chdir: "{{ vdi_install_dir }}"
   changed_when: false
-
-- name: Enable LightDM
-  ansible.builtin.service:
-    name: lightdm
-    enabled: true

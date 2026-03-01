@@ -15,10 +15,10 @@
     fuser -v /var/lib/dpkg/lock-frontend /var/lib/dpkg/lock /var/cache/apt/archives/lock /var/lib/apt/lists/lock || true
   changed_when: false
   failed_when: false
-  
+
 - name: Install desktop + prereqs (noninteractive, long-running safe)
   ansible.builtin.apt:
-    name: "{{ vdi_prereq_packages + vdi_desktop_packages }}"
+    name: "{{ vdi_prereq_packages + vdi_desktop_packages + ['python3', 'python3-venv', 'python3-pip'] }}"
     state: present
     update_cache: true
     cache_valid_time: 3600
@@ -36,18 +36,36 @@
     version: "main"
     force: false
 
-- name: Run requirements.sh (python deps)
-  ansible.builtin.command: "bash ./requirements.sh"
+# ---- PEP 668 safe install: use a venv instead of system pip ----
+
+- name: Ensure venv directory exists
+  ansible.builtin.file:
+    path: "{{ vdi_install_dir }}/venv"
+    state: directory
+    mode: "0755"
+
+- name: Create venv (idempotent)
+  ansible.builtin.command: "python3 -m venv {{ vdi_install_dir }}/venv"
   args:
-    chdir: "{{ vdi_install_dir }}"
+    creates: "{{ vdi_install_dir }}/venv/bin/python"
+
+- name: Upgrade pip tooling inside venv
+  ansible.builtin.command: "{{ vdi_install_dir }}/venv/bin/pip install --upgrade pip setuptools wheel"
   changed_when: false
 
-- name: Install launcher into /usr/local/bin
+- name: Install Python dependencies into venv
+  ansible.builtin.command: "{{ vdi_install_dir }}/venv/bin/pip install -r {{ vdi_install_dir }}/requirements.txt"
+  changed_when: false
+
+# Wrapper launcher so we always use the venv python
+- name: Install VDI launcher wrapper into /usr/local/bin
   ansible.builtin.copy:
-    src: "{{ vdi_install_dir }}/vdiclient.py"
     dest: "{{ vdi_bin }}"
     mode: "0755"
-    remote_src: true
+    content: |
+      #!/usr/bin/env bash
+      set -euo pipefail
+      exec "{{ vdi_install_dir }}/venv/bin/python" "{{ vdi_install_dir }}/vdiclient.py" "$@"
 
 - name: Ensure graphical target
   ansible.builtin.command: systemctl set-default graphical.target

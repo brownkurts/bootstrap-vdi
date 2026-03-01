@@ -5,7 +5,6 @@
   become: true
 
   vars:
-    # Start simple: direct node IPs
     vdi_tls_verify: false
     vdi_auth_backend: "pve"
 
@@ -15,5 +14,20 @@
       "192.168.2.215": 8006
       "192.168.2.204": 8006
 
+    # add your SSH pubkey here (or pass in via --extra-vars / vars file)
+    vdi_admin_ssh_pubkey: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGs8e1xn2rNm4khYFUUHZxYkvqRlUosajkq0j9SrTR8t ansible"
+
   roles:
     - pve_vdi_thinclient
+
+  tasks:
+    - name: Add Kurt SSH key for thin client management
+      ansible.builtin.authorized_key:
+        user: "{{ vdi_local_user | default('kurt') }}"
+        key: "{{ vdi_admin_ssh_pubkey }}"
+        state: present
+
+    - name: Reboot to complete VDI thin client setup
+      ansible.builtin.reboot:
+        msg: "Rebooting to complete VDI thin client setup"
+        reboot_timeout: 900

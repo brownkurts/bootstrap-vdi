@@ -3,9 +3,20 @@
 vdi_local_user: "vdi"
 vdi_local_user_shell: "/bin/bash"
 
+# Optional: management SSH access
+vdi_enable_ssh: true
+vdi_admin_ssh_pubkeys: []
+# Example:
+# vdi_admin_ssh_pubkeys:
+#   - "ssh-ed25519 AAAA... kurt@laptop"
+
 # Where to install the app
 vdi_install_dir: "/opt/PVE-VDIClient"
-vdi_bin: "/usr/local/bin/vdiclient.py"
+
+# Use a venv and keep a stable wrapper command
+vdi_venv_dir: "{{ vdi_install_dir }}/venv"
+vdi_launcher: "/usr/local/bin/vdiclient"          # wrapper you run
+vdi_app_entry: "{{ vdi_install_dir }}/vdiclient.py"
 
 # Client config
 vdi_config_dir: "/etc/vdiclient"
@@ -25,42 +36,40 @@ vdi_auth_totp: false
 vdi_tls_verify: false
 
 # Hosts list (key=host, value=port)
-# Example:
-# vdi_hosts:
-#   "pve1.home.arpa": 8006
-#   "10.0.1.10": 8006
 vdi_hosts: {}
 
 # Optional: rewrite the SPICE proxy host/port if needed (common if DNS/VIP differs)
-# Example:
-# vdi_spice_proxy_redirect:
-#   "pve1.home.arpa:3128": "10.0.1.10:6000"
 vdi_spice_proxy_redirect: {}
 
 # Extra remote-viewer parameters (virt-viewer)
-# USB redirection options are supported as "AdditionalParameters" in the ini example :contentReference[oaicite:1]{index=1}
 vdi_additional_parameters:
   enable-usbredir: "true"
   enable-usb-autoshare: "false"
 
 # Desktop session packages
 vdi_desktop_packages:
-  - "xorg"
-  - "openbox"
-  - "lightdm"
-  - "lightdm-gtk-greeter"
-  - "xterm"           # useful for local troubleshooting
-  - "unclutter"       # hides mouse cursor when idle
+  - xorg
+  - openbox
+  - lightdm
+  - lightdm-gtk-greeter
+  - xterm
+  - unclutter
 
-# PVE-VDIClient prereqs from README :contentReference[oaicite:2]{index=2}
+# PVE-VDIClient prereqs
 vdi_prereq_packages:
-  - "python3-pip"
-  - "python3-tk"
-  - "virt-viewer"
-  - "git"
-  - "ca-certificates"
-  - "curl"
-  - "jq"
+  - python3
+  - python3-venv
+  - python3-pip
+  - python3-tk
+  - virt-viewer
+  - git
+  - ca-certificates
+  - curl
+  - jq
+  - openssh-server
 
 # Where to place autostart desktop entry
 vdi_autostart_dir: "/home/{{ vdi_local_user }}/.config/autostart"
+
+# Reboot behavior
+vdi_reboot_after_install: true

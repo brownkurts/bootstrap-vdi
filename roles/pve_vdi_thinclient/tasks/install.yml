@@ -18,7 +18,7 @@
 
 - name: Install desktop + prereqs (noninteractive, long-running safe)
   ansible.builtin.apt:
-    name: "{{ vdi_prereq_packages + vdi_desktop_packages + ['python3', 'python3-venv', 'python3-pip'] }}"
+    name: "{{ (vdi_prereq_packages + vdi_desktop_packages) | unique }}"
     state: present
     update_cache: true
     cache_valid_time: 3600
@@ -29,6 +29,23 @@
   async: 7200
   poll: 30
 
+- name: Ensure SSH is enabled (optional)
+  ansible.builtin.service:
+    name: ssh
+    state: started
+    enabled: true
+  when: vdi_enable_ssh | bool
+
+- name: Install admin SSH keys (optional)
+  ansible.posix.authorized_key:
+    user: "{{ vdi_local_user }}"
+    key: "{{ item }}"
+    state: present
+  loop: "{{ vdi_admin_ssh_pubkeys }}"
+  when:
+    - vdi_enable_ssh | bool
+    - vdi_admin_ssh_pubkeys | length > 0
+
 - name: Install PVE-VDIClient from git
   ansible.builtin.git:
     repo: "https://github.com/joshpatten/PVE-VDIClient.git"
@@ -37,22 +54,13 @@
     force: false
 
 # ---- PEP 668 safe install: use a venv ----
-
 - name: Create Python venv (idempotent)
-  ansible.builtin.command: "python3 -m venv {{ vdi_install_dir }}/venv"
+  ansible.builtin.command: "python3 -m venv {{ vdi_venv_dir }}"
   args:
-    creates: "{{ vdi_install_dir }}/venv/bin/python"
+    creates: "{{ vdi_venv_dir }}/bin/python"
 
 - name: Upgrade pip inside venv
-  ansible.builtin.command: "{{ vdi_install_dir }}/venv/bin/pip install --upgrade pip setuptools wheel"
-  changed_when: false
-
-# Optional debug (leave or remove)
-- name: Debug venv python/pip
-  ansible.builtin.command: "{{ item }}"
-  loop:
-    - "{{ vdi_install_dir }}/venv/bin/python -c 'import sys; print(sys.executable)'"
-    - "{{ vdi_install_dir }}/venv/bin/pip --version"
+  ansible.builtin.command: "{{ vdi_venv_dir }}/bin/pip install --upgrade pip setuptools wheel"
   changed_when: false
 
 - name: Make requirements.sh executable
@@ -63,11 +71,50 @@
 - name: Run requirements.sh inside venv (bash)
   ansible.builtin.shell: |
     set -euo pipefail
-    export VIRTUAL_ENV="{{ vdi_install_dir }}/venv"
-    export PATH="{{ vdi_install_dir }}/venv/bin:${PATH}"
-    . "{{ vdi_install_dir }}/venv/bin/activate"
+    export VIRTUAL_ENV="{{ vdi_venv_dir }}"
+    export PATH="{{ vdi_venv_dir }}/bin:${PATH}"
+    . "{{ vdi_venv_dir }}/bin/activate"
     ./requirements.sh
   args:
     chdir: "{{ vdi_install_dir }}"
     executable: /bin/bash
   changed_when: false
+
+# ---- Config + autostart ----
+- name: Ensure config directory exists
+  ansible.builtin.file:
+    path: "{{ vdi_config_dir }}"
+    state: directory
+    mode: "0755"
+
+- name: Ensure autostart directory exists
+  ansible.builtin.file:
+    path: "{{ vdi_autostart_dir }}"
+    state: directory
+    owner: "{{ vdi_local_user }}"
+    group: "{{ vdi_local_user }}"
+    mode: "0755"
+
+# This wrapper prevents “black screen” because it always runs with the venv python
+- name: Install launcher wrapper
+  ansible.builtin.copy:
+    dest: "{{ vdi_launcher }}"
+    mode: "0755"
+    content: |
+      #!/usr/bin/env bash
+      set -euo pipefail
+      exec "{{ vdi_venv_dir }}/bin/python" "{{ vdi_app_entry }}" "$@"
+
+# Make sure lightdm is enabled; black screen often = display manager not starting
+- name: Ensure LightDM is enabled and started
+  ansible.builtin.service:
+    name: lightdm
+    enabled: true
+    state: started
+
+# Optional reboot at end
+- name: Reboot to complete VDI thin client setup
+  ansible.builtin.reboot:
+    msg: "Rebooting to complete VDI thin client setup"
+    reboot_timeout: 900
+  when: vdi_reboot_after_install | bool

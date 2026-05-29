@@ -30,8 +30,9 @@ vdi_fullscreen: true
 vdi_inidebug: false
 vdi_guest_type: "both"   # both|lxc|qemu
 
-# Auth config (pve, pam, etc. depending on your Proxmox setup)
-vdi_auth_backend: "pve"
+# Auth config — use the Proxmox realm ID (pve, pam, ad, etc.)
+# "ad" = Active Directory realm (check pvesh get /access/domains for your realm ID)
+vdi_auth_backend: "ad"
 vdi_auth_totp: false
 vdi_tls_verify: false
 

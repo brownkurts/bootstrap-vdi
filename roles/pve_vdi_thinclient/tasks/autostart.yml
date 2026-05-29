@@ -15,9 +15,12 @@
     group: "{{ vdi_local_user }}"
     mode: "0755"
 
-# NOTE: We intentionally skip the XDG .desktop autostart file and use
-# openbox/autostart directly below. This avoids double-launch and removes
-# the python3-xdg / openbox-xdg-autostart dependency.
+# Remove legacy .desktop autostart file if it exists from earlier runs.
+# We use openbox/autostart directly instead to avoid double-launch.
+- name: Remove legacy XDG autostart desktop file (causes double-launch)
+  ansible.builtin.file:
+    path: "{{ vdi_autostart_dir }}/vdiclient.desktop"
+    state: absent
 
 - name: (Optional) Hide cursor when idle
   ansible.builtin.lineinfile:

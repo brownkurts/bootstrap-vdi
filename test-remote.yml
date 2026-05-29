@@ -9,7 +9,7 @@
 
   vars:
     vdi_tls_verify: false
-    vdi_auth_backend: "pve"
+    vdi_auth_backend: "ad"            # AD realm in Proxmox (pvesh get /access/domains)
     vdi_reboot_after_install: false   # we reboot manually when testing
 
     vdi_hosts:

@@ -15,13 +15,9 @@
     group: "{{ vdi_local_user }}"
     mode: "0755"
 
-- name: Install autostart desktop entry for VDI client
-  ansible.builtin.template:
-    src: "vdiclient.desktop.j2"
-    dest: "{{ vdi_autostart_dir }}/vdiclient.desktop"
-    owner: "{{ vdi_local_user }}"
-    group: "{{ vdi_local_user }}"
-    mode: "0644"
+# NOTE: We intentionally skip the XDG .desktop autostart file and use
+# openbox/autostart directly below. This avoids double-launch and removes
+# the python3-xdg / openbox-xdg-autostart dependency.
 
 - name: (Optional) Hide cursor when idle
   ansible.builtin.lineinfile:

@@ -71,6 +71,7 @@ vdi_prereq_packages:
   - xserver-xorg-video-fbdev   # fbdev fallback (bare-metal without dedicated driver)
   - xserver-xorg-video-vmware  # VMware SVGA / Proxmox vga:vmware VMs
   - xserver-xorg-video-vesa    # universal VESA fallback (last resort)
+  - python3-xdg                # required by openbox-xdg-autostart to process ~/.config/autostart/*.desktop
 
 # Where to place autostart desktop entry
 vdi_autostart_dir: "/home/{{ vdi_local_user }}/.config/autostart"

@@ -31,3 +31,14 @@
     group: "{{ vdi_local_user }}"
     mode: "0644"
     line: "unclutter -idle 1 -root &"
+
+# Belt-and-suspenders: also launch vdiclient directly from openbox/autostart
+# so it runs even if openbox-xdg-autostart / PyXDG is unavailable.
+- name: Launch VDI client from openbox autostart (direct, no XDG dependency)
+  ansible.builtin.lineinfile:
+    path: "/home/{{ vdi_local_user }}/.config/openbox/autostart"
+    create: true
+    owner: "{{ vdi_local_user }}"
+    group: "{{ vdi_local_user }}"
+    mode: "0644"
+    line: "{{ vdi_launcher }} &"

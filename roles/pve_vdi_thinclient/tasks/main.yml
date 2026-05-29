@@ -2,7 +2,10 @@
 - name: Install
   ansible.builtin.import_tasks: install.yml
 
-- name: Configure
+- name: Configure Xorg fallback (VM + bare-metal compatibility)
+  ansible.builtin.import_tasks: xorg.yml
+
+- name: Configure VDI client
   ansible.builtin.import_tasks: config.yml
 
 - name: Configure autologin

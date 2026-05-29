@@ -1,0 +1,49 @@
+---
+# xorg.yml — write a minimal xorg.conf so Xorg doesn't fail with "no screens found"
+# on VMs or hardware where autodetection fails.  On real hardware with a proper GPU
+# (Intel / AMD / NVIDIA) modesetting takes over and this file is silently ignored.
+
+- name: Ensure /etc/X11 exists
+  ansible.builtin.file:
+    path: /etc/X11
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Write fallback xorg.conf (fbdev / vesa cascade)
+  ansible.builtin.copy:
+    dest: /etc/X11/xorg.conf
+    owner: root
+    group: root
+    mode: "0644"
+    content: |
+      # Minimal xorg.conf written by bootstrap-vdi
+      # Ensures Xorg finds a screen on VMs (std VGA, virtio, vmware) and on
+      # bare-metal hardware that lacks a proprietary driver.
+      # On systems with a real GPU the modesetting/native driver takes over.
+
+      Section "Device"
+          Identifier  "VDI Display"
+          Driver      "fbdev"
+      EndSection
+
+      Section "Screen"
+          Identifier  "VDI Screen"
+          Device      "VDI Display"
+          DefaultDepth 24
+          SubSection "Display"
+              Depth    24
+              Modes    "1280x800" "1024x768" "800x600"
+          EndSubSection
+      EndSection
+
+      Section "Monitor"
+          Identifier  "VDI Monitor"
+          Option      "DPMS" "false"
+      EndSection
+
+      Section "ServerLayout"
+          Identifier  "VDI Layout"
+          Screen      "VDI Screen"
+      EndSection

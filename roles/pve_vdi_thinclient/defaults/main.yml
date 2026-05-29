@@ -67,6 +67,8 @@ vdi_prereq_packages:
   - curl
   - jq
   - openssh-server
+  - accountsservice       # required by LightDM (org.freedesktop.Accounts D-Bus service)
+  - xserver-xorg-video-fbdev  # fallback Xorg driver for VMs / hardware without dedicated GPU
 
 # Where to place autostart desktop entry
 vdi_autostart_dir: "/home/{{ vdi_local_user }}/.config/autostart"

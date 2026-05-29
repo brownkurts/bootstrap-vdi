@@ -1,0 +1,25 @@
+---
+# test-remote.yml — run from Ansible server to test the role against a remote VM
+# Usage: ansible-playbook test-remote.yml -i <VM_IP>, -u ubuntu --become
+# This mirrors site.yml but targets a remote host instead of localhost.
+
+- name: Build PVE VDI Thin Client (remote test)
+  hosts: all
+  become: true
+
+  vars:
+    vdi_tls_verify: false
+    vdi_auth_backend: "pve"
+    vdi_reboot_after_install: false   # we reboot manually when testing
+
+    vdi_hosts:
+      "192.168.2.201": 8006
+      "192.168.2.212": 8006
+      "192.168.2.215": 8006
+      "192.168.2.204": 8006
+
+    vdi_admin_ssh_pubkeys:
+      - "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGs8e1xn2rNm4khYFUUHZxYkvqRlUosajkq0j9SrTR8t ansible"
+
+  roles:
+    - pve_vdi_thinclient

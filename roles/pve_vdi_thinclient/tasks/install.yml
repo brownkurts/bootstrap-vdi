@@ -112,10 +112,5 @@
     name: lightdm
     enabled: true
     state: started
-
-# Optional reboot at end
-- name: Reboot to complete VDI thin client setup
-  ansible.builtin.reboot:
-    msg: "Rebooting to complete VDI thin client setup"
-    reboot_timeout: 900
-  when: vdi_reboot_after_install | bool
+# NOTE: reboot is handled by site.yml (fire-and-forget async) so ansible-pull
+# finishes cleanly before the machine restarts. Do NOT add reboot here.

@@ -29,6 +29,7 @@ vdi_kiosk: false
 vdi_fullscreen: true
 vdi_inidebug: false
 vdi_guest_type: "both"   # both|lxc|qemu
+vdi_vm_filter_tag: ""    # Only show VMs with this Proxmox tag (e.g. "vdi"). Empty = show all.
 
 # Auth config — use the Proxmox realm ID (pve, pam, ad, etc.)
 # "ad" = Active Directory realm (check pvesh get /access/domains for your realm ID)

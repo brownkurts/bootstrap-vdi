@@ -54,6 +54,26 @@
     force: true
     update: true
 
+- name: Patch vdiclient.py — add vm_filter_tag global
+  ansible.builtin.lineinfile:
+    path: "{{ vdi_install_dir }}/vdiclient.py"
+    insertafter: "^\tguest_type = 'both'"
+    line: "\tvm_filter_tag = None"
+    regexp: "^\tvm_filter_tag ="
+
+- name: Patch vdiclient.py — read vm_filter_tag from config
+  ansible.builtin.lineinfile:
+    path: "{{ vdi_install_dir }}/vdiclient.py"
+    insertafter: "if 'guest_type' in config\\['General'\\]:"
+    line: "\t\tif 'vm_filter_tag' in config['General']:\n\t\t\tG.vm_filter_tag = config['General']['vm_filter_tag'] or None"
+    regexp: "if 'vm_filter_tag' in config"
+
+- name: Patch vdiclient.py — filter VMs by tag in getvms()
+  ansible.builtin.replace:
+    path: "{{ vdi_install_dir }}/vdiclient.py"
+    regexp: "(if G\\.guest_type == 'both' or G\\.guest_type == vm\\['type'\\]:)"
+    replace: "\\1\n\t\t\tif G.vm_filter_tag and G.vm_filter_tag not in (vm.get('tags') or '').split(';'): continue"
+
 # ---- PEP 668 safe install: use a venv ----
 - name: Create Python venv (idempotent)
   ansible.builtin.command: "python3 -m venv {{ vdi_venv_dir }}"

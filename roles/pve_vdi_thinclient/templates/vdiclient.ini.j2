@@ -5,6 +5,9 @@ kiosk = {{ vdi_kiosk | lower }}
 fullscreen = {{ vdi_fullscreen | lower }}
 inidebug = {{ vdi_inidebug | lower }}
 guest_type = {{ vdi_guest_type }}
+{% if vdi_vm_filter_tag %}
+vm_filter_tag = {{ vdi_vm_filter_tag }}
+{% endif %}
 
 [Authentication]
 auth_backend = {{ vdi_auth_backend }}

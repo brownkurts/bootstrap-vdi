@@ -54,25 +54,60 @@
     force: true
     update: true
 
-- name: Patch vdiclient.py — add vm_filter_tag global
-  ansible.builtin.lineinfile:
-    path: "{{ vdi_install_dir }}/vdiclient.py"
-    insertafter: "^\tguest_type = 'both'"
-    line: "\tvm_filter_tag = None"
-    regexp: "^\tvm_filter_tag ="
+- name: Install vm_filter_tag patch script
+  ansible.builtin.copy:
+    dest: "{{ vdi_install_dir }}/patch_vdiclient.py"
+    mode: "0755"
+    content: |
+      #!/usr/bin/env python3
+      """Idempotent patch: adds vm_filter_tag support to vdiclient.py"""
+      import sys, re
+      path = "{{ vdi_install_dir }}/vdiclient.py"
+      with open(path) as f:
+          src = f.read()
 
-- name: Patch vdiclient.py — read vm_filter_tag from config
-  ansible.builtin.lineinfile:
-    path: "{{ vdi_install_dir }}/vdiclient.py"
-    insertafter: "if 'guest_type' in config\\['General'\\]:"
-    line: "\t\tif 'vm_filter_tag' in config['General']:\n\t\t\tG.vm_filter_tag = config['General']['vm_filter_tag'] or None"
-    regexp: "if 'vm_filter_tag' in config"
+      if 'vm_filter_tag' in src:
+          print("already patched")
+          sys.exit(0)
 
-- name: Patch vdiclient.py — filter VMs by tag in getvms()
-  ansible.builtin.replace:
-    path: "{{ vdi_install_dir }}/vdiclient.py"
-    regexp: "(if G\\.guest_type == 'both' or G\\.guest_type == vm\\['type'\\]:)"
-    replace: "\\1\n\t\t\tif G.vm_filter_tag and G.vm_filter_tag not in (vm.get('tags') or '').split(';'): continue"
+      lines = src.splitlines(keepends=True)
+      out = []
+      i = 0
+      while i < len(lines):
+          line = lines[i]
+          # 1. Add global after guest_type = 'both'
+          if line.strip() == "guest_type = 'both'":
+              out.append(line)
+              out.append("\tvm_filter_tag = None\n")
+              i += 1
+              continue
+          # 2. Read from config — insert after G.guest_type = config[...] assignment
+          if re.search(r"G\.guest_type = config\[.General.\]\[.guest_type.\]", line):
+              out.append(line)
+              indent = "\t\t"
+              out.append(f"{indent}if 'vm_filter_tag' in config['General']:\n")
+              out.append(f"{indent}\tG.vm_filter_tag = config['General']['vm_filter_tag'] or None\n")
+              i += 1
+              continue
+          # 3. Filter in getvms() — insert inside guest_type if block
+          if re.search(r"if G\.guest_type == 'both' or G\.guest_type == vm\['type'\]:", line):
+              out.append(line)
+              indent = "\t\t\t\t"
+              out.append(f"{indent}if G.vm_filter_tag and G.vm_filter_tag not in (vm.get('tags') or '').split(';'):\n")
+              out.append(f"{indent}\tcontinue\n")
+              i += 1
+              continue
+          out.append(line)
+          i += 1
+
+      with open(path, 'w') as f:
+          f.writelines(out)
+      print("patched ok")
+
+- name: Patch vdiclient.py — add vm_filter_tag support
+  ansible.builtin.command: "python3 {{ vdi_install_dir }}/patch_vdiclient.py"
+  register: patch_result
+  changed_when: "'patched ok' in patch_result.stdout"
 
 # ---- PEP 668 safe install: use a venv ----
 - name: Create Python venv (idempotent)

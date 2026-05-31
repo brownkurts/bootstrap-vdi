@@ -6,3 +6,10 @@ vdi_hosts:
   "192.168.2.212": 8006
   "192.168.2.215": 8006
   "192.168.2.204": 8006
+
+# Map Proxmox node hostnames → IPs so SPICE proxy works even when AD/DC is down
+vdi_spice_proxy_redirect:
+  "proxmox03.brown.local:3128": "192.168.2.212:3128"
+  "proxmox-01.brown.local:3128": "192.168.2.201:3128"
+  "proxmox05.brown.local:3128": "192.168.2.215:3128"
+  "pve-4.brown.local:3128": "192.168.2.204:3128"

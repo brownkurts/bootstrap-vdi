@@ -1,0 +1,115 @@
+#cloud-config
+autoinstall:
+  version: 1
+
+  locale: en_US.UTF-8
+
+  keyboard:
+    layout: us
+
+  identity:
+    hostname: ubuntu-desktop
+    username: kurt
+    password: "PASTE_HASH_HERE"
+
+  ssh:
+    install-server: true
+    allow-pw: true
+
+  network:
+    version: 2
+    ethernets:
+      wired:
+        match:
+          name: "e*"
+        dhcp4: true
+        dhcp6: false
+        optional: true
+
+storage:
+  config:
+    - type: disk
+      id: disk0
+      match:
+        size: largest
+      ptable: gpt
+      wipe: superblock-recursive
+
+    - type: partition
+      id: partition0
+      device: disk0
+      size: -1
+
+    - type: format
+      id: format0
+      volume: partition0
+      fstype: ext4
+
+    - type: mount
+      id: mount0
+      device: format0
+      path: /
+
+  packages:
+    - curl
+    - git
+    - ansible
+    - openssh-server
+
+  late-commands:
+    - curtin in-target -- systemctl enable ssh
+
+    - curtin in-target -- bash -c "cat > /usr/local/sbin/firstboot-desktop.sh <<'SCRIPT'
+#!/usr/bin/env bash
+set -euxo pipefail
+
+export DEBIAN_FRONTEND=noninteractive
+
+apt-get update
+
+apt-get install -y \
+  ubuntu-desktop-minimal \
+  gdm3 \
+  dbus-x11 \
+  dconf-cli \
+  python3-psutil \
+  ansible \
+  git \
+  curl \
+  openssh-server
+
+systemctl set-default graphical.target
+systemctl enable gdm3 || systemctl enable gdm
+
+ansible-pull \
+  -U https://github.com/brownkurts/ansible_pull_desktop.git \
+  -i localhost, \
+  -c local \
+  local.yml || true
+
+systemctl disable firstboot-desktop.service || true
+rm -f /etc/systemd/system/firstboot-desktop.service
+rm -f /usr/local/sbin/firstboot-desktop.sh
+
+reboot
+SCRIPT
+chmod +x /usr/local/sbin/firstboot-desktop.sh"
+
+    - curtin in-target -- bash -c "cat > /etc/systemd/system/firstboot-desktop.service <<'SERVICE'
+[Unit]
+Description=Install Ubuntu Desktop and run ansible-pull on first boot
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/firstboot-desktop.sh
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
+SERVICE"
+
+    - curtin in-target -- systemctl enable firstboot-desktop.service
+
+  shutdown: reboot
